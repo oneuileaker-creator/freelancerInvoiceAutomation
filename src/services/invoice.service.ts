@@ -1,6 +1,7 @@
 import { prisma } from '../config/database'
 import { generateInvoiceNumber } from '../utils/invoice-number'
 import { emailService } from './email.service'
+import { generateInvoicePdf } from '../utils/pdf'
 
 const formatLineItem = (item: any) => ({
   id: item.id,
@@ -389,4 +390,54 @@ export const deleteInvoice = async (invoiceId: string, userId: string) => {
   }
 
   await prisma.invoice.delete({ where: { id: invoiceId } })
+}
+
+export const getInvoicePdf = async (
+  invoiceId: string,
+  userId: string
+): Promise<Buffer> => {
+  // Get invoice with all data
+  const invoice = await prisma.invoice.findFirst({
+    where: { id: invoiceId, userId },
+    include: {
+      client: true,
+      lineItems: true,
+      payment: true,
+    },
+  })
+
+  if (!invoice) throw new Error('INVOICE_NOT_FOUND')
+
+  // Get user (freelancer) data for the PDF header
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      name: true,
+      email: true,
+      businessName: true,
+      address: true,
+      phone: true,
+      gstin: true,
+      upiId: true,
+      bankAccountName: true,
+      bankAccountNumber: true,
+      bankIfsc: true,
+      bankName: true,
+    },
+  })
+
+  if (!user) throw new Error('USER_NOT_FOUND')
+
+  // Format invoice dates for PDF
+  const invoiceForPdf = {
+    ...invoice,
+    issueDate: invoice.issueDate.toISOString().split('T')[0],
+    dueDate: invoice.dueDate.toISOString().split('T')[0],
+    payment: invoice.payment ? {
+      ...invoice.payment,
+      date: invoice.payment.date.toISOString().split('T')[0],
+    } : null,
+  }
+
+  return generateInvoicePdf(invoiceForPdf, user)
 }

@@ -3,7 +3,6 @@ import { z } from 'zod'
 import * as invoiceService from '../services/invoice.service'
 import { sendSuccess, sendError } from '../utils/response'
 import { AuthRequest } from '../middleware/auth'
-import { generateInvoicePdf } from '../utils/pdf'
 
 const lineItemSchema = z.object({
   description: z.string().min(1, 'Description required'),
@@ -277,15 +276,27 @@ export const downloadPdf = async (
   res: Response
 ): Promise<void> => {
   try {
+    const pdfBuffer = await invoiceService.getInvoicePdf(
+      req.params.id,
+      req.userId!
+    )
+
+    // Get invoice number for filename
     const invoice = await invoiceService.getInvoice(req.params.id, req.userId!)
+
     res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', `attachment; filename=Invoice-${invoice.invoice_number}.pdf`)
-    generateInvoicePdf(invoice, res)
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${invoice.invoice_number}.pdf"`
+    )
+    res.setHeader('Content-Length', pdfBuffer.length)
+    res.send(pdfBuffer)
   } catch (error: any) {
     if (error.message === 'INVOICE_NOT_FOUND') {
       sendError(res, 'Invoice not found', 404)
       return
     }
+    console.error('PDF generation error:', error)
     sendError(res, 'Failed to generate PDF', 500)
   }
 }
