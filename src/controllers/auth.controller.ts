@@ -21,14 +21,14 @@ const updateProfileSchema = z.object({
   business_name: z.string().min(1, 'Business name is required').max(100),
   address: z.string().min(1, 'Address is required'),
   phone: z.string().min(10, 'Valid phone number required'),
-  gstin: z.string().length(15, 'GSTIN must be 15 characters').optional().or(z.literal('')),
+  gstin: z.string().length(15, 'GSTIN must be 15 characters').nullish().or(z.literal('')),
   is_gst_registered: z.boolean(),
   invoice_prefix: z.string().min(1).max(5).default('INV'),
-  upi_id: z.string().optional(),
-  bank_account_name: z.string().optional(),
-  bank_account_number: z.string().optional(),
-  bank_ifsc: z.string().optional(),
-  bank_name: z.string().optional(),
+  upi_id: z.string().nullish(),
+  bank_account_name: z.string().nullish(),
+  bank_account_number: z.string().nullish(),
+  bank_ifsc: z.string().nullish(),
+  bank_name: z.string().nullish(),
 })
 
 const forgotPasswordSchema = z.object({
