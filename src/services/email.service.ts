@@ -20,7 +20,7 @@ class EmailService {
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`
     
     const mailOptions = {
-      from: process.env.EMAIL_FROM || 'noreply@freelanceflow.app',
+      from: process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@freelanceflow.app',
       to: email,
       subject: `Password Reset for ${process.env.APP_NAME || 'FreelanceFlow'}`,
       html: `
@@ -42,7 +42,7 @@ class EmailService {
 
   async sendInvoiceToClient(invoice: any, client: any): Promise<void> {
     const mailOptions = {
-      from: process.env.EMAIL_FROM || 'noreply@freelanceflow.app',
+      from: process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@freelanceflow.app',
       to: client.email,
       subject: `Invoice ${invoice.invoiceNumber} from Freelancer`,
       html: `
@@ -76,7 +76,7 @@ class EmailService {
 
   async sendPaymentReminder(invoice: any, client: any): Promise<void> {
     const mailOptions = {
-      from: process.env.EMAIL_FROM || 'noreply@freelanceflow.app',
+      from: process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@freelanceflow.app',
       to: client.email,
       subject: `Reminder: Invoice ${invoice.invoiceNumber} is outstanding`,
       html: `
