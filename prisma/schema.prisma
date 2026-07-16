@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── User (Freelancer) ──────────────────────────────────────
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  password      String
+  phone         String?
+
+  // Business info
+  businessName  String?  @map("business_name")
+  address       String?
+  gstin         String?
+  isGstRegistered Boolean @default(false) @map("is_gst_registered")
+
+  // Invoice settings
+  invoicePrefix String   @default("INV") @map("invoice_prefix")
+  invoiceCount  Int      @default(0) @map("invoice_count")
+
+  // Payment details
+  upiId         String?  @map("upi_id")
+  bankAccountName   String? @map("bank_account_name")
+  bankAccountNumber String? @map("bank_account_number")
+  bankIfsc      String?  @map("bank_ifsc")
+  bankName      String?  @map("bank_name")
+
+  // Logo
+  logoUrl       String?  @map("logo_url")
+
+  // Subscription
+  subscriptionTier String @default("FREE") @map("subscription_tier")
+
+  // Onboarding
+  onboardingComplete Boolean @default(false) @map("onboarding_complete")
+
+  // Password reset
+  resetToken    String?  @map("reset_token")
+  resetTokenExpiry DateTime? @map("reset_token_expiry")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  clients       Client[]
+  invoices      Invoice[]
+
+  @@map("users")
+}
+
+// ── Client ─────────────────────────────────────────────────
+model Client {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  gstin     String?
+  notes     String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices  Invoice[]
+
+  @@map("clients")
+}
+
+// ── Invoice ────────────────────────────────────────────────
+model Invoice {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  clientId      String   @map("client_id")
+  invoiceNumber String   @map("invoice_number")
+
+  issueDate     DateTime @map("issue_date")
+  dueDate       DateTime @map("due_date")
+
+  subtotal      Float
+  gstPercentage Float    @default(0) @map("gst_percentage")
+  gstAmount     Float    @default(0) @map("gst_amount")
+  total         Float
+
+  status        InvoiceStatus @default(DRAFT)
+  notes         String?
+  paymentTerms  String?  @map("payment_terms")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client        Client     @relation(fields: [clientId], references: [id])
+  lineItems     LineItem[]
+  payment       Payment?
+  reminderLogs  ReminderLog[]
+
+  @@map("invoices")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+}
+
+// ── Line Item ──────────────────────────────────────────────
+model LineItem {
+  id          String  @id @default(cuid())
+  invoiceId   String  @map("invoice_id")
+  description String
+  quantity    Float
+  rate        Float
+  amount      Float
+
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("line_items")
+}
+
+// ── Payment ────────────────────────────────────────────────
+model Payment {
+  id              String   @id @default(cuid())
+  invoiceId       String   @unique @map("invoice_id")
+  amount          Float
+  date            DateTime
+  method          String
+  referenceNumber String?  @map("reference_number")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// ── Reminder Log ───────────────────────────────────────────
+model ReminderLog {
+  id        String   @id @default(cuid())
+  invoiceId String   @map("invoice_id")
+  sentAt    DateTime @default(now()) @map("sent_at")
+  channel   String                    // WHATSAPP / EMAIL / SMS
+  status    String                    // SENT / DELIVERED / FAILED
+
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("reminder_logs")
+}
