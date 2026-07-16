@@ -6,11 +6,11 @@ import { AuthRequest } from '../middleware/auth'
 
 const clientSchema = z.object({
   name: z.string().min(1, 'Client name is required').max(100),
-  email: z.string().email('Invalid email').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  gstin: z.string().length(15, 'GSTIN must be 15 characters').optional().or(z.literal('')),
-  notes: z.string().optional(),
+  email: z.string().email('Invalid email').nullish().or(z.literal('')),
+  phone: z.string().nullish(),
+  address: z.string().nullish(),
+  gstin: z.string().length(15, 'GSTIN must be 15 characters').nullish().or(z.literal('')),
+  notes: z.string().nullish(),
 })
 
 export const getClients = async (
