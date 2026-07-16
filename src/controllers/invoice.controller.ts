@@ -185,6 +185,7 @@ export const sendInvoice = async (
     const invoice = await invoiceService.sendInvoice(req.params.id, req.userId!)
     sendSuccess(res, invoice, 'Invoice sent successfully')
   } catch (error: any) {
+    console.error('Error sending invoice:', error)
     if (error.message === 'INVOICE_NOT_FOUND') {
       sendError(res, 'Invoice not found', 404)
       return
@@ -239,6 +240,7 @@ export const sendReminder = async (
     const result = await invoiceService.sendReminder(req.params.id, req.userId!)
     sendSuccess(res, result, 'Reminder notification sent')
   } catch (error: any) {
+    console.error('Error sending reminder:', error)
     if (error.message === 'INVOICE_NOT_FOUND') {
       sendError(res, 'Invoice not found', 404)
       return
