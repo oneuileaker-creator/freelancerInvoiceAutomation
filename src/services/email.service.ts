@@ -4,9 +4,11 @@ class EmailService {
   private transporter: nodemailer.Transporter
 
   constructor() {
+    const port = parseInt(process.env.SMTP_PORT || '2525')
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'sandbox.smtp.mailtrap.io',
-      port: parseInt(process.env.SMTP_PORT || '2525'),
+      port: port,
+      secure: port === 465, // true for port 465, false for others
       auth: {
         user: process.env.SMTP_USER || '',
         pass: process.env.SMTP_PASS || '',
