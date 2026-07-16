@@ -6,24 +6,29 @@ import dotenv from 'dotenv'
 // Load environment variables first
 dotenv.config()
 
-const requiredEnvVars = [
-  'DATABASE_URL',
-  'JWT_SECRET',
-  'SMTP_HOST',
-  'SMTP_PORT',
-  'SMTP_USER',
-  'SMTP_PASS',
-  'EMAIL_FROM',
-]
+const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET']
 
 const missingVars = requiredEnvVars.filter(
   (varName) => !process.env[varName]
 )
 
+const hasBrevo = !!process.env.BREVO_API_KEY
+const hasResend = !!process.env.RESEND_API_KEY
+const hasSmtp = !!(
+  process.env.SMTP_HOST &&
+  process.env.SMTP_PORT &&
+  process.env.SMTP_USER &&
+  process.env.SMTP_PASS
+)
+
+if (!hasBrevo && !hasResend && !hasSmtp) {
+  missingVars.push('Email Config (Either BREVO_API_KEY, RESEND_API_KEY, or SMTP settings)')
+}
+
 if (missingVars.length > 0) {
   console.error('❌ Missing required environment variables:')
   missingVars.forEach((v) => console.error(`   - ${v}`))
-  console.error('\nCheck your .env file.')
+  console.error('\nCheck your .env file or environment settings.')
   process.exit(1)
 }
 
