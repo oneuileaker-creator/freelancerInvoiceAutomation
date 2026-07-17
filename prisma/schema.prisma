@@ -36,7 +36,8 @@ model User {
   logoUrl       String?  @map("logo_url")
 
   // Subscription
-  subscriptionTier String @default("FREE") @map("subscription_tier")
+  subscriptionTier      String    @default("FREE") @map("subscription_tier")
+  subscriptionExpiresAt DateTime? @map("subscription_expires_at")
 
   // Onboarding
   onboardingComplete Boolean @default(false) @map("onboarding_complete")

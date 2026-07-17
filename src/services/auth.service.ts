@@ -28,6 +28,7 @@ export const formatUser = (user: any) => ({
   bank_name: user.bankName ?? null,
   logo_url: user.logoUrl ?? null,
   subscription_tier: user.subscriptionTier,
+  subscription_expires_at: user.subscriptionExpiresAt?.toISOString() ?? null,
   onboarding_complete: user.onboardingComplete,
 })
 

@@ -9,7 +9,7 @@ import { runReminderScheduler } from './services/reminder.service'
 // Load environment variables first
 dotenv.config()
 
-const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET']
+const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET']
 
 const missingVars = requiredEnvVars.filter(
   (varName) => !process.env[varName]
@@ -40,6 +40,7 @@ console.log('✓ Environment variables validated')
 import authRoutes from './routes/auth.routes'
 import clientRoutes from './routes/client.routes'
 import invoiceRoutes from './routes/invoice.routes'
+import paymentRoutes from './routes/payment.routes'
 import { errorHandler } from './middleware/errorHandler'
 import { sendSuccess } from './utils/response'
 
@@ -63,6 +64,7 @@ app.get('/health', (req, res) => {
 app.use('/auth', authRoutes)
 app.use('/clients', clientRoutes)
 app.use('/invoices', invoiceRoutes)
+app.use('/payments', paymentRoutes)
 
 // ── 404 Route handler ──────────────────────────────────────
 app.use((req, res) => {
