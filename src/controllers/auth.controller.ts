@@ -5,6 +5,7 @@ import { sendSuccess, sendError } from '../utils/response'
 import { AuthRequest } from '../middleware/auth'
 import { emailService } from '../services/email.service'
 import { prisma } from '../config/database'
+import bcrypt from 'bcryptjs'
 
 const registerSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -244,5 +245,66 @@ export const updateReminderSettings = async (
       return
     }
     sendError(res, 'Failed to update reminder settings', 500)
+  }
+}
+
+const changePasswordSchema = z.object({
+  current_password: z.string().min(1, 'Current password required'),
+  new_password: z.string().min(8, 'Min 8 characters'),
+})
+
+export const changePassword = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const body = changePasswordSchema.parse(req.body)
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId! },
+    })
+
+    if (!user) {
+      sendError(res, 'User not found', 404)
+      return
+    }
+
+    // Verify current password
+    const passwordMatch = await bcrypt.compare(
+      body.current_password,
+      user.password,
+    )
+
+    if (!passwordMatch) {
+      sendError(res, 'Current password is incorrect', 400, {
+        current_password: 'Incorrect password',
+      })
+      return
+    }
+
+    // Hash new password
+    const hashed = await bcrypt.hash(body.new_password, 12)
+
+    await prisma.user.update({
+      where: { id: req.userId! },
+      data: { password: hashed },
+    })
+
+    sendSuccess(res, null, 'Password changed successfully')
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      const fieldErrors: Record<string, string> = {}
+      error.errors.forEach((e: any) => {
+        fieldErrors[e.path.join('.')] = e.message
+      })
+      res.status(422).json({
+        success: false,
+        data: null,
+        message: 'Validation failed',
+        errors: fieldErrors,
+      })
+      return
+    }
+    sendError(res, 'Failed to change password', 500)
   }
 }
