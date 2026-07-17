@@ -285,7 +285,7 @@ export const updateInvoice = async (
 export const sendInvoice = async (invoiceId: string, userId: string) => {
   const invoice = await prisma.invoice.findFirst({
     where: { id: invoiceId, userId },
-    include: { client: true, lineItems: true },
+    include: { client: true, lineItems: true, user: true },
   })
 
   if (!invoice) throw new Error('INVOICE_NOT_FOUND')
@@ -350,13 +350,7 @@ export const sendReminder = async (invoiceId: string, userId: string) => {
     include: {
       client: true,
       lineItems: true,
-      user: {
-        select: {
-          name: true,
-          businessName: true,
-          email: true,
-        }
-      }
+      user: true
     },
   })
 
