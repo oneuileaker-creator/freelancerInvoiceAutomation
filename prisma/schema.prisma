@@ -52,6 +52,12 @@ model User {
   quietHoursStart       Int     @default(21)   @map("quiet_hours_start")
   quietHoursEnd         Int     @default(9)    @map("quiet_hours_end")
 
+  // Account security
+  failedLoginAttempts  Int       @default(0) @map("failed_login_attempts")
+  lockedUntil          DateTime? @map("locked_until")
+  lastLoginAt          DateTime? @map("last_login_at")
+  lastLoginIp          String?   @map("last_login_ip")
+
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 

@@ -50,7 +50,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       body.name,
       body.email,
       body.password,
-      body.business_name
+      body.business_name,
     )
 
     sendSuccess(res, result, 'Account created successfully', 201)
@@ -76,13 +76,32 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const body = loginSchema.parse(req.body)
-    const result = await authService.loginUser(body.email, body.password)
+
+    // Pass IP address for logging
+    const ip = req.headers['x-forwarded-for']?.toString().split(',')[0]
+      ?? req.socket.remoteAddress
+      ?? 'unknown'
+
+    const result = await authService.loginUser(body.email, body.password, ip)
     sendSuccess(res, result, 'Login successful')
   } catch (error: any) {
     if (error.message === 'INVALID_CREDENTIALS') {
       sendError(res, 'Invalid email or password', 401)
       return
     }
+
+    // Handle account lockout
+    if (error.message?.startsWith('ACCOUNT_LOCKED:')) {
+      const minutes = error.message.split(':')[1]
+      sendError(
+        res,
+        `Account temporarily locked due to too many failed attempts. ` +
+        `Please try again in ${minutes} minute${minutes === '1' ? '' : 's'}.`,
+        423,   // 423 Locked
+      )
+      return
+    }
+
     sendError(res, 'Login failed', 500)
   }
 }

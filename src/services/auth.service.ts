@@ -35,7 +35,7 @@ export const registerUser = async (
   name: string,
   email: string,
   password: string,
-  businessName?: string
+  businessName?: string,
 ) => {
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {
@@ -57,16 +57,62 @@ export const registerUser = async (
   return { token, user: formatUser(user) }
 }
 
-export const loginUser = async (email: string, password: string) => {
+export const loginUser = async (
+  email: string,
+  password: string,
+  ipAddress?: string,
+) => {
   const user = await prisma.user.findUnique({ where: { email } })
+
   if (!user) {
     throw new Error('INVALID_CREDENTIALS')
   }
 
+  // ── Check if account is locked ─────────────────────────
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
+    const minutesLeft = Math.ceil(
+      (user.lockedUntil.getTime() - Date.now()) / 60000
+    )
+    throw new Error(`ACCOUNT_LOCKED:${minutesLeft}`)
+  }
+
+  // ── Check password ─────────────────────────────────────
   const passwordMatch = await bcrypt.compare(password, user.password)
+
   if (!passwordMatch) {
+    const newFailedAttempts = user.failedLoginAttempts + 1
+
+    // Lock account after 10 failed attempts for 30 minutes
+    const shouldLock = newFailedAttempts >= 10
+    const lockedUntil = shouldLock
+      ? new Date(Date.now() + 30 * 60 * 1000)
+      : null
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        failedLoginAttempts: newFailedAttempts,
+        lockedUntil,
+      },
+    })
+
+    if (shouldLock) {
+      throw new Error('ACCOUNT_LOCKED:30')
+    }
+
     throw new Error('INVALID_CREDENTIALS')
   }
+
+  // ── Success — reset failed attempts ────────────────────
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      lastLoginAt: new Date(),
+      lastLoginIp: ipAddress ?? null,
+    },
+  })
 
   const token = generateToken(user.id)
   return { token, user: formatUser(user) }
