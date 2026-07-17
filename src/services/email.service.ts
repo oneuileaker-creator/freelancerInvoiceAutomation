@@ -28,7 +28,7 @@ class EmailService {
   }
 
   private async sendEmail(to: string, subject: string, html: string): Promise<void> {
-    const from = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@freelanceflow.app'
+    const from = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@freelancerflow.work.gd'
 
     // 1. Try Brevo HTTP API
     if (this.brevoApiKey) {
