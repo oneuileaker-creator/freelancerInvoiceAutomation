@@ -12,6 +12,11 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   business_name: z.string().max(100).optional(),
+  otp: z.string().length(6, 'OTP must be 6 digits'),
+})
+
+const sendOtpSchema = z.object({
+  email: z.string().email('Invalid email'),
 })
 
 const loginSchema = z.object({
@@ -42,6 +47,30 @@ const resetPasswordSchema = z.object({
   new_password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
+export const sendOtp = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const body = sendOtpSchema.parse(req.body)
+    await authService.sendRegistrationOtp(body.email)
+    sendSuccess(res, null, 'Verification code sent successfully')
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      const fieldErrors: Record<string, string> = {}
+      error.errors.forEach((e: any) => {
+        fieldErrors[e.path.join('.')] = e.message
+      })
+      res.status(422).json({ success: false, data: null, message: 'Validation failed', errors: fieldErrors })
+      return
+    }
+    if (error.message === 'EMAIL_TAKEN') {
+      sendError(res, 'An account with this email already exists', 409, {
+        email: 'Already in use'
+      })
+      return
+    }
+    sendError(res, 'Failed to send verification code', 500)
+  }
+}
+
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const body = registerSchema.parse(req.body)
@@ -51,6 +80,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       body.email,
       body.password,
       body.business_name,
+      body.otp,
     )
 
     sendSuccess(res, result, 'Account created successfully', 201)
@@ -66,6 +96,24 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     if (error.message === 'EMAIL_TAKEN') {
       sendError(res, 'An account with this email already exists', 409, {
         email: 'Already in use'
+      })
+      return
+    }
+    if (error.message === 'OTP_REQUIRED') {
+      sendError(res, 'Verification code is required', 400, {
+        otp: 'Required'
+      })
+      return
+    }
+    if (error.message === 'INVALID_OTP') {
+      sendError(res, 'Invalid verification code', 400, {
+        otp: 'Incorrect code'
+      })
+      return
+    }
+    if (error.message === 'OTP_EXPIRED') {
+      sendError(res, 'Verification code has expired. Please request a new one.', 400, {
+        otp: 'Expired code'
       })
       return
     }

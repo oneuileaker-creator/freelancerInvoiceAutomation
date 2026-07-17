@@ -13,6 +13,7 @@ import {
 const router = Router()
 
 // Public routes with rate limiting
+router.post('/register/send-otp', registerRateLimit, authController.sendOtp)
 router.post('/register', registerRateLimit, authController.register)
 router.post('/login', loginRateLimit, authController.login)
 router.post('/forgot-password', forgotPasswordRateLimit, authController.forgotPassword)

@@ -31,16 +31,57 @@ export const formatUser = (user: any) => ({
   onboarding_complete: user.onboardingComplete,
 })
 
+import { emailService } from './email.service'
+
+export const sendRegistrationOtp = async (email: string) => {
+  const existing = await prisma.user.findUnique({ where: { email } })
+  if (existing) {
+    throw new Error('EMAIL_TAKEN')
+  }
+
+  // Generate 6-digit OTP
+  const code = Math.floor(100000 + Math.random() * 900000).toString()
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes expiry
+
+  // Upsert Otp in DB
+  await prisma.otp.upsert({
+    where: { email },
+    update: { code, expiresAt },
+    create: { email, code, expiresAt },
+  })
+
+  // Send email
+  await emailService.sendOtp(email, code)
+}
+
 export const registerUser = async (
   name: string,
   email: string,
   password: string,
   businessName?: string,
+  otpCode?: string,
 ) => {
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {
     throw new Error('EMAIL_TAKEN')
   }
+
+  if (!otpCode) {
+    throw new Error('OTP_REQUIRED')
+  }
+
+  // Verify OTP
+  const otpRecord = await prisma.otp.findUnique({ where: { email } })
+  if (!otpRecord || otpRecord.code !== otpCode) {
+    throw new Error('INVALID_OTP')
+  }
+
+  if (otpRecord.expiresAt < new Date()) {
+    throw new Error('OTP_EXPIRED')
+  }
+
+  // Delete verified OTP record
+  await prisma.otp.delete({ where: { email } })
 
   const hashedPassword = await bcrypt.hash(password, 12)
 

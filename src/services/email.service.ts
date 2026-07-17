@@ -27,6 +27,33 @@ class EmailService {
     }
   }
 
+  public async sendOtp(to: string, code: string): Promise<void> {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Verify Your Email</title>
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8F9FA; padding: 24px; margin: 0;">
+      <div style="max-width: 500px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #EAEAEA; border-radius: 8px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <h2 style="font-size: 20px; font-weight: 600; color: #111111; margin-top: 0;">Verify your email</h2>
+        <p style="color: #6B6B6B; font-size: 14px; line-height: 20px;">
+          Thanks for signing up for FreelanceFlow! Use the following verification code to complete your registration. This code is valid for 10 minutes.
+        </p>
+        <div style="background-color: #F1F3F5; border-radius: 6px; padding: 16px; text-align: center; margin: 24px 0;">
+          <span style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #000000; font-family: monospace;">${code}</span>
+        </div>
+        <p style="color: #9E9E9E; font-size: 12px; line-height: 18px; margin-bottom: 0;">
+          If you didn't request this verification code, you can safely ignore this email.
+        </p>
+      </div>
+    </body>
+    </html>
+    `
+    await this.sendEmail(to, 'Verify Your Email Address — FreelanceFlow', html)
+  }
+
   private async sendEmail(to: string, subject: string, html: string): Promise<void> {
     const from = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@freelancerflow.work.gd'
 
