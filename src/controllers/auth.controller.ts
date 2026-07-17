@@ -4,6 +4,7 @@ import * as authService from '../services/auth.service'
 import { sendSuccess, sendError } from '../utils/response'
 import { AuthRequest } from '../middleware/auth'
 import { emailService } from '../services/email.service'
+import { prisma } from '../config/database'
 
 const registerSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -161,5 +162,87 @@ export const resetPassword = async (
       return
     }
     sendError(res, 'Failed to reset password', 500)
+  }
+}
+
+const reminderSettingsSchema = z.object({
+  reminders_enabled: z.boolean(),
+  reminder_email_enabled: z.boolean(),
+  reminder_days_before: z.number().min(0).max(7).default(2),
+  quiet_hours_start: z.number().min(0).max(23).default(21),
+  quiet_hours_end: z.number().min(0).max(23).default(9),
+})
+
+export const getReminderSettings = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId! },
+      select: {
+        remindersEnabled: true,
+        reminderEmailEnabled: true,
+        reminderDaysBefore: true,
+        quietHoursStart: true,
+        quietHoursEnd: true,
+      },
+    })
+
+    if (!user) {
+      sendError(res, 'User not found', 404)
+      return
+    }
+
+    sendSuccess(res, {
+      reminders_enabled: user.remindersEnabled,
+      reminder_email_enabled: user.reminderEmailEnabled,
+      reminder_days_before: user.reminderDaysBefore,
+      quiet_hours_start: user.quietHoursStart,
+      quiet_hours_end: user.quietHoursEnd,
+    })
+  } catch (error) {
+    sendError(res, 'Failed to get reminder settings', 500)
+  }
+}
+
+export const updateReminderSettings = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const body = reminderSettingsSchema.parse(req.body)
+
+    const user = await prisma.user.update({
+      where: { id: req.userId! },
+      data: {
+        remindersEnabled: body.reminders_enabled,
+        reminderEmailEnabled: body.reminder_email_enabled,
+        reminderDaysBefore: body.reminder_days_before,
+        quietHoursStart: body.quiet_hours_start,
+        quietHoursEnd: body.quiet_hours_end,
+      },
+      select: {
+        remindersEnabled: true,
+        reminderEmailEnabled: true,
+        reminderDaysBefore: true,
+        quietHoursStart: true,
+        quietHoursEnd: true,
+      },
+    })
+
+    sendSuccess(res, {
+      reminders_enabled: user.remindersEnabled,
+      reminder_email_enabled: user.reminderEmailEnabled,
+      reminder_days_before: user.reminderDaysBefore,
+      quiet_hours_start: user.quietHoursStart,
+      quiet_hours_end: user.quietHoursEnd,
+    })
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      sendError(res, 'Invalid settings', 400)
+      return
+    }
+    sendError(res, 'Failed to update reminder settings', 500)
   }
 }

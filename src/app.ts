@@ -2,6 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
+import cron from 'node-cron'
+import { runReminderScheduler } from './services/reminder.service'
 
 // Load environment variables first
 dotenv.config()
@@ -72,6 +74,16 @@ app.use((req, res) => {
 
 // ── Global Error Handler ───────────────────────────────────
 app.use(errorHandler)
+
+// ── Cron Jobs ──────────────────────────────────────────────
+// Run reminder scheduler every hour at minute 0
+cron.schedule('0 * * * *', async () => {
+  await runReminderScheduler()
+}, {
+  timezone: 'Asia/Kolkata',   // IST timezone
+})
+
+console.log('✓ Reminder scheduler registered (runs hourly, IST)')
 
 // ── Start Server ───────────────────────────────────────────
 const PORT = process.env.PORT || 8080

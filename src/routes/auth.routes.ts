@@ -10,5 +10,7 @@ router.get('/me', authenticate, authController.getMe)
 router.put('/profile', authenticate, authController.updateProfile)
 router.post('/forgot-password', authController.forgotPassword)
 router.post('/reset-password', authController.resetPassword)
+router.get('/reminder-settings', authenticate, authController.getReminderSettings)
+router.put('/reminder-settings', authenticate, authController.updateReminderSettings)
 
 export default router

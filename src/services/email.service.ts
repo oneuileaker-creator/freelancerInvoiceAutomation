@@ -347,6 +347,55 @@ class EmailService {
     `
     await this.sendEmail(client.email, `Reminder: Invoice ${invoice.invoiceNumber} is outstanding`, html)
   }
+
+  async sendOverdueAlertToFreelancer(
+    invoice: any,
+    user: any,
+    daysOverdue: number,
+  ): Promise<void> {
+    const formatRupeesLocal = (amount: number) =>
+      `₹${amount.toLocaleString('en-IN')}`
+
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family:Arial,sans-serif;background:#F9F9F9;margin:0;padding:40px 20px">
+      <div style="max-width:500px;margin:0 auto;background:#FFFFFF;border:1px solid #E4E4E4;border-radius:8px;padding:32px">
+        <div style="font-size:18px;font-weight:700;color:#FF4444;margin-bottom:16px">
+          ⚠️ Invoice Overdue — ${daysOverdue} Days
+        </div>
+        <p style="color:#6B6B6B;font-size:14px;line-height:1.6">
+          Hi ${user.name},
+        </p>
+        <p style="color:#6B6B6B;font-size:14px;line-height:1.6">
+          Your invoice <strong>${invoice.invoiceNumber}</strong> from <strong>${invoice.client.name}</strong> is now <strong style="color:#FF4444">${daysOverdue} days overdue</strong>.
+        </p>
+        <div style="background:#FFF5F5;border:1px solid #FFCCCC;border-radius:6px;padding:16px;margin:20px 0">
+          <div style="font-size:12px;color:#6B6B6B">Outstanding Amount</div>
+          <div style="font-size:28px;font-weight:700;color:#FF4444">${formatRupeesLocal(invoice.total)}</div>
+          <div style="font-size:12px;color:#6B6B6B;margin-top:6px">
+            Client: ${invoice.client.name}
+          </div>
+          ${invoice.client.phone ? `<div style="font-size:12px;color:#6B6B6B">Phone: ${invoice.client.phone}</div>` : ''}
+          ${invoice.client.email ? `<div style="font-size:12px;color:#6B6B6B">Email: ${invoice.client.email}</div>` : ''}
+        </div>
+        <p style="color:#6B6B6B;font-size:13px">
+          We've already sent automatic reminders to your client. You may want to follow up directly.
+        </p>
+        <p style="color:#6B6B6B;font-size:13px;margin-top:16px">
+          — FreelanceFlow
+        </p>
+      </div>
+    </body>
+    </html>
+    `
+
+    await this.sendEmail(
+      user.email,
+      `⚠️ ${daysOverdue} Days Overdue — ${invoice.client.name} (${invoice.invoiceNumber})`,
+      html
+    )
+  }
 }
 
 export const emailService = new EmailService()

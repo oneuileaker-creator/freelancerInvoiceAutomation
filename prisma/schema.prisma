@@ -45,6 +45,13 @@ model User {
   resetToken    String?  @map("reset_token")
   resetTokenExpiry DateTime? @map("reset_token_expiry")
 
+  // Reminder settings
+  remindersEnabled      Boolean @default(true) @map("reminders_enabled")
+  reminderEmailEnabled  Boolean @default(true) @map("reminder_email_enabled")
+  reminderDaysBefore    Int     @default(2)    @map("reminder_days_before")
+  quietHoursStart       Int     @default(21)   @map("quiet_hours_start")
+  quietHoursEnd         Int     @default(9)    @map("quiet_hours_end")
+
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
