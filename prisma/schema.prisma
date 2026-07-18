@@ -38,6 +38,7 @@ model User {
   // Subscription
   subscriptionTier      String    @default("FREE") @map("subscription_tier")
   subscriptionExpiresAt DateTime? @map("subscription_expires_at")
+  isPromoWinner         Boolean   @default(false) @map("is_promo_winner")
 
   // Onboarding
   onboardingComplete Boolean @default(false) @map("onboarding_complete")

@@ -29,6 +29,7 @@ export const formatUser = (user: any) => ({
   logo_url: user.logoUrl ?? null,
   subscription_tier: user.subscriptionTier,
   subscription_expires_at: user.subscriptionExpiresAt?.toISOString() ?? null,
+  is_promo_winner: user.isPromoWinner,
   onboarding_complete: user.onboardingComplete,
 })
 
@@ -86,12 +87,31 @@ export const registerUser = async (
 
   const hashedPassword = await bcrypt.hash(password, 12)
 
+  // Check user count to determine promotion eligibility (next 10 users, current count is 7, so up to 17 users)
+  const userCount = await prisma.user.count()
+  const isPromoEligible = userCount < 17
+
+  let subscriptionTier = 'FREE'
+  let subscriptionExpiresAt: Date | null = null
+  let isPromoWinner = false
+
+  if (isPromoEligible) {
+    subscriptionTier = 'PRO'
+    const expires = new Date()
+    expires.setMonth(expires.getMonth() + 6)
+    subscriptionExpiresAt = expires
+    isPromoWinner = true
+  }
+
   const user = await prisma.user.create({
     data: {
       name,
       email,
       password: hashedPassword,
       businessName: businessName ?? null,
+      subscriptionTier,
+      subscriptionExpiresAt,
+      isPromoWinner,
     },
   })
 
