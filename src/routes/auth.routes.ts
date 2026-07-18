@@ -22,6 +22,7 @@ router.post('/reset-password', authController.resetPassword)
 // Protected routes
 router.get('/me', authenticate, authController.getMe)
 router.put('/profile', authenticate, authController.updateProfile)
+router.post('/skip-onboarding', authenticate, authController.skipOnboarding)
 router.post('/change-password', authenticate, authController.changePassword)
 router.get('/reminder-settings', authenticate, authController.getReminderSettings)
 router.put('/reminder-settings', authenticate, authController.updateReminderSettings)

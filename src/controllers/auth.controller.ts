@@ -198,6 +198,19 @@ export const updateProfile = async (
   }
 }
 
+export const skipOnboarding = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const user = await authService.skipOnboarding(req.userId!)
+    sendSuccess(res, user, 'Onboarding completed (skipped)')
+  } catch (error) {
+    sendError(res, 'Failed to skip onboarding', 500)
+  }
+}
+
+
 export const forgotPassword = async (
   req: Request,
   res: Response

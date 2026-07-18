@@ -219,6 +219,14 @@ export const updateUserProfile = async (userId: string, data: {
   return formatUser(user)
 }
 
+export const skipOnboarding = async (userId: string) => {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { onboardingComplete: true },
+  })
+  return formatUser(user)
+}
+
 export const createPasswordResetToken = async (email: string) => {
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user) throw new Error('USER_NOT_FOUND')
