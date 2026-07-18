@@ -18,15 +18,8 @@ const verifySchema = z.object({
 // POST /payments/create-order
 export const createOrder = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { plan } = createOrderSchema.parse(req.body)
-    const order = await paymentService.createOrder(plan, req.userId!)
-    sendSuccess(res, order, 'Order created')
+    sendError(res, 'payment gateway is still under progress, come back later', 400)
   } catch (error: any) {
-    if (error.name === 'ZodError') {
-      res.status(422).json({ success: false, data: null, message: 'Invalid plan', errors: null })
-      return
-    }
-    console.error('Create order error:', error)
     sendError(res, 'Failed to create payment order', 500)
   }
 }
