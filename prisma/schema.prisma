@@ -110,6 +110,9 @@ model Invoice {
   notes         String?
   paymentTerms  String?  @map("payment_terms")
 
+  viewedAt      DateTime? @map("viewed_at")
+  viewCount     Int       @default(0) @map("view_count")
+
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 

@@ -41,6 +41,7 @@ import authRoutes from './routes/auth.routes'
 import clientRoutes from './routes/client.routes'
 import invoiceRoutes from './routes/invoice.routes'
 import paymentRoutes from './routes/payment.routes'
+import viewRoutes from './routes/view.routes'
 import { errorHandler } from './middleware/errorHandler'
 import { sendSuccess } from './utils/response'
 
@@ -103,6 +104,7 @@ app.use('/auth', authRoutes)
 app.use('/clients', clientRoutes)
 app.use('/invoices', invoiceRoutes)
 app.use('/payments', paymentRoutes)
+app.use('/view', viewRoutes)
 
 // ── 404 Route handler ──────────────────────────────────────
 app.use((req, res) => {

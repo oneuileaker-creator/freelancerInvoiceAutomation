@@ -55,6 +55,8 @@ const formatInvoice = (invoice: any) => ({
   payment_terms: invoice.paymentTerms ?? null,
   payment: formatPayment(invoice.payment),
   reminder_logs: invoice.reminderLogs?.map(formatReminderLog) ?? [],
+  viewed_at: invoice.viewedAt?.toISOString() ?? null,
+  view_count: invoice.viewCount,
   created_at: invoice.createdAt.toISOString(),
 })
 
