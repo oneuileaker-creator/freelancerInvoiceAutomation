@@ -56,8 +56,46 @@ app.use(express.urlencoded({ extended: true }))
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
 // ── Health Check ───────────────────────────────────────────
-app.get('/health', (req, res) => {
-  sendSuccess(res, { status: 'UP', timestamp: new Date().toISOString() }, 'Server is healthy')
+app.get('/health', async (req, res) => {
+  const start = Date.now()
+
+  // Ping the database
+  let dbStatus = 'UP'
+  let dbLatencyMs = 0
+  try {
+    const { prisma } = await import('./config/database')
+    const t0 = Date.now()
+    await prisma.$queryRaw`SELECT 1`
+    dbLatencyMs = Date.now() - t0
+  } catch {
+    dbStatus = 'DOWN'
+  }
+
+  const mem = process.memoryUsage()
+
+  const payload = {
+    status: dbStatus === 'UP' ? 'UP' : 'DEGRADED',
+    environment: process.env.NODE_ENV ?? 'unknown',
+    uptime_seconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    database: {
+      status: dbStatus,
+      latency_ms: dbLatencyMs,
+    },
+    memory: {
+      heap_used_mb: +(mem.heapUsed / 1024 / 1024).toFixed(2),
+      heap_total_mb: +(mem.heapTotal / 1024 / 1024).toFixed(2),
+      rss_mb: +(mem.rss / 1024 / 1024).toFixed(2),
+    },
+    response_ms: Date.now() - start,
+  }
+
+  res.status(dbStatus === 'UP' ? 200 : 503).json({
+    success: dbStatus === 'UP',
+    data: payload,
+    message: dbStatus === 'UP' ? 'Server is healthy' : 'Server degraded — DB unreachable',
+    errors: null,
+  })
 })
 
 // ── Routes ─────────────────────────────────────────────────
