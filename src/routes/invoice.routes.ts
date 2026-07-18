@@ -25,6 +25,7 @@ router.post('/', createInvoiceRateLimit, invoiceController.createInvoice)
 router.get('/:id', invoiceController.getInvoice)
 router.put('/:id', invoiceController.updateInvoice)
 router.delete('/:id', invoiceController.deleteInvoice)
+router.delete('/', invoiceController.bulkDeleteInvoices)
 router.post('/:id/send', invoiceController.sendInvoice)
 router.post('/:id/mark-paid', invoiceController.markPaid)
 

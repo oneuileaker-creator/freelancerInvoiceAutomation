@@ -379,11 +379,18 @@ export const deleteInvoice = async (invoiceId: string, userId: string) => {
 
   if (!invoice) throw new Error('INVOICE_NOT_FOUND')
 
-  if (invoice.status !== 'DRAFT') {
-    throw new Error('CANNOT_DELETE_SENT_INVOICE')
-  }
-
   await prisma.invoice.delete({ where: { id: invoiceId } })
+}
+
+export const bulkDeleteInvoices = async (invoiceIds: string[], userId: string) => {
+  // Only delete invoices belonging to this user
+  const result = await prisma.invoice.deleteMany({
+    where: {
+      id: { in: invoiceIds },
+      userId,
+    },
+  })
+  return { deleted: result.count }
 }
 
 export const getInvoicePdf = async (

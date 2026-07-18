@@ -265,13 +265,27 @@ export const deleteInvoice = async (
       sendError(res, 'Invoice not found', 404)
       return
     }
-    if (error.message === 'CANNOT_DELETE_SENT_INVOICE') {
-      sendError(res, 'Only draft invoices can be deleted', 400)
-      return
-    }
     sendError(res, 'Failed to delete invoice', 500)
   }
 }
+
+export const bulkDeleteInvoices = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { ids } = req.body
+    if (!Array.isArray(ids) || ids.length === 0) {
+      sendError(res, 'ids must be a non-empty array', 422)
+      return
+    }
+    const result = await invoiceService.bulkDeleteInvoices(ids, req.userId!)
+    sendSuccess(res, result, `${result.deleted} invoice${result.deleted !== 1 ? 's' : ''} deleted`)
+  } catch (error) {
+    sendError(res, 'Failed to bulk delete invoices', 500)
+  }
+}
+
 
 export const downloadPdf = async (
   req: AuthRequest,
