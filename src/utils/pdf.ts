@@ -105,6 +105,19 @@ export const generateInvoicePdf = (
          .fontSize(9)
          .text(invoice.status, 485, rightY + 4, { width: 70, align: 'center' })
 
+      // PAID stamp watermark for Pro users/verification
+      if (invoice.status === 'PAID') {
+        const fs = require('fs')
+        const path = require('path')
+        const watermarkPath = path.join(process.cwd(), 'uploads', 'pdf_watermark_paid.png')
+        if (fs.existsSync(watermarkPath)) {
+          doc.save()
+          doc.opacity(0.85)
+          doc.image(watermarkPath, 340, rightY - 5, { width: 55 })
+          doc.restore()
+        }
+      }
+
       y = Math.max(y, rightY + 35) + 20
 
       // ── Divider ──────────────────────────────────────────
@@ -366,6 +379,14 @@ export const generateInvoicePdf = (
       const footerText = invoice.payment 
         ? `Paid on ${formatDate(invoice.payment.date)}` 
         : `Please pay by ${formatDate(invoice.dueDate)}`
+
+      // Thank You Signature stamp
+      const fs = require('fs')
+      const path = require('path')
+      const sigPath = path.join(process.cwd(), 'uploads', 'thank_you_signature.png')
+      if (fs.existsSync(sigPath)) {
+        doc.image(sigPath, 475, 715, { width: 80 })
+      }
 
       doc.fillColor(secondaryColor)
          .font('Helvetica-Bold')

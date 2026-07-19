@@ -186,8 +186,11 @@ class EmailService {
         <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); border: 1px solid #EAEAEA;">
           
           <!-- Header Banner -->
-          <div style="background-color: #0A0A0A; padding: 24px; text-align: center;">
-            <h1 style="color: #00E5A0; margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 0.5px;">${user.businessName || user.name || 'Invoice Notification'}</h1>
+          <div style="text-align: center; background-color: #F4F6F8;">
+            <img src="https://freelancerinvoiceautomation.onrender.com/uploads/email_banner_success.png" alt="FreelanceFlow" style="width: 100%; max-width: 600px; display: block; border-bottom: 4px solid #00E5A0;" />
+          </div>
+          <div style="background-color: #0A0A0A; padding: 20px 24px; text-align: center;">
+            <h1 style="color: #00E5A0; margin: 0; font-size: 22px; font-weight: bold; letter-spacing: 0.5px;">${user.businessName || user.name || 'Invoice Notification'}</h1>
             ${user.businessName ? `<p style="color: #8E8E93; margin: 5px 0 0 0; font-size: 13px;">${user.name}</p>` : ''}
           </div>
 
